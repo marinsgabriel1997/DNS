@@ -214,28 +214,23 @@ text_frame.pack(side=tk.RIGHT, padx=10, pady=10, fill=tk.BOTH, expand=True)
 
 # Componentes da interface (configurações)
 tk.Label(config_frame, text="Selecione o Adaptador de Rede:").pack(pady=5)
-adaptador_var = tk.StringVar()
+adaptador_var = tk.StringVar(value="")
 adaptadores_lista = listar_adaptadores()
 adaptador_dropdown = ttk.Combobox(config_frame, textvariable=adaptador_var, values=adaptadores_lista, state="readonly")
 adaptador_dropdown.pack(pady=5)
 
-for i, adaptador in enumerate(adaptadores_lista):
-    if adaptador.startswith("* "):
-        adaptador_dropdown.current(i)
-        break
-
 tk.Label(config_frame, text="DNS Primário:").pack(pady=5)
-dns1_var = tk.StringVar(value="Google")
+dns1_var = tk.StringVar(value="")
 dns1_dropdown = ttk.Combobox(config_frame, textvariable=dns1_var, values=list(DNS_OPTIONS.keys()), state="readonly")
 dns1_dropdown.pack(pady=5)
 
 tk.Label(config_frame, text="DNS Secundário:").pack(pady=5)
-dns2_var = tk.StringVar(value="Cloudflare")
+dns2_var = tk.StringVar(value="")
 dns2_dropdown = ttk.Combobox(config_frame, textvariable=dns2_var, values=list(DNS_OPTIONS.keys()), state="readonly")
 dns2_dropdown.pack(pady=5)
 
-ipv4_var = tk.BooleanVar(value=True)
-ipv6_var = tk.BooleanVar(value=True)
+ipv4_var = tk.BooleanVar(value=False)
+ipv6_var = tk.BooleanVar(value=False)
 
 ipv4_checkbox = tk.Checkbutton(config_frame, text="Aplicar DNS para IPv4", variable=ipv4_var)
 ipv4_checkbox.pack(pady=5)
@@ -247,7 +242,7 @@ botoes_frame = tk.Frame(config_frame)
 botoes_frame.pack(pady=15)
 
 tk.Button(botoes_frame, text="Aplicar DNS", command=aplicar_dns, bg="green", fg="white").pack(side=tk.LEFT, padx=5)
-tk.Button(botoes_frame, text="Restaurar DNS", command=restaurar_dns, bg="orange", fg="white").pack(side=tk.LEFT, padx=5)
+tk.Button(botoes_frame, text="Restaurar DNS (DHCP)", command=restaurar_dns, bg="blue", fg="white").pack(side=tk.LEFT, padx=5)
 
 # Adiciona um rótulo para mostrar as propriedades do adaptador
 tk.Label(config_frame, text="Propriedades do Adaptador:").pack(pady=5)
