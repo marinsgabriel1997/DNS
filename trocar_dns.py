@@ -6,7 +6,6 @@ import ctypes
 from typing import Tuple
 import psutil
 import socket
-import ipaddress
 
 DNS_OPTIONS = {
     "Google": ("8.8.8.8", "8.8.4.4", "2001:4860:4860::8888", "2001:4860:4860::8844"),
@@ -41,16 +40,44 @@ def run_command(command: str) -> Tuple[bool, str]:
 
 def listar_adaptadores():
     adaptadores = []
-    adaptadores_ativos = []
+    adaptadores_com_internet = []
     print("Listando adaptadores de rede...")
 
     for interface, info in psutil.net_if_addrs().items():
         adaptadores.append(interface)
         if interface in psutil.net_if_stats() and psutil.net_if_stats()[interface].isup:
-            adaptadores_ativos.append(interface)
             print(f"Adaptador ativo encontrado: {interface}")
+            
+            # Obtém o endereço IPv4 da interface
+            ipv4_address = None
+            for addr in info:
+                if addr.family == socket.AF_INET:  # Verifica se é um endereço IPv4
+                    ipv4_address = addr.address
+                    break
+            
+            if ipv4_address:
+                print(f"Verificando conectividade da interface {interface} com IP {ipv4_address}...")
+                try:
+                    # Realiza um ping forçando o uso do IP da interface
+                    comando = f'ping -n 1 -S {ipv4_address} 8.8.8.8'
+                    resultado = subprocess.run(comando, shell=True, capture_output=True, text=True, timeout=2)
+                    
+                    # Verifica se o ping foi bem-sucedido
+                    if "Resposta" in resultado.stdout:
+                        adaptadores_com_internet.append(interface)
+                        print(f"Adaptador {interface} tem conectividade com a internet.")
+                    else:
+                        print(f"Adaptador {interface} não tem conectividade com a internet.")
+                except subprocess.TimeoutExpired:
+                    print(f"Adaptador {interface} não tem conectividade com a internet (timeout).")
+                except Exception as e:
+                    print(f"Erro ao verificar conectividade da interface {interface}: {e}")
+            else:
+                print(f"Adaptador {interface} não tem um endereço IPv4 configurado.")
+        else:
+            print(f"Adaptador {interface} está inativo.")
 
-    return [f"{'* ' if nome in adaptadores_ativos else ''}{nome}" for nome in adaptadores]
+    return [f"{'* ' if nome in adaptadores_com_internet else ''}{nome}" for nome in adaptadores]
 
 
 def formatar_saida(texto: str) -> str:
@@ -73,13 +100,15 @@ def formatar_saida(texto: str) -> str:
 
 def obter_propriedades_adaptador(adaptador: str) -> str:
     print(f"Obtendo propriedades do adaptador: {adaptador}")
-    comando = f'netsh interface ip show config "{adaptador}"'
+    comando = f'powershell Get-NetIPConfiguration -InterfaceAlias "{adaptador}" -Detailed'
     
     try:
         resultado = subprocess.run(comando, shell=True, capture_output=True, text=True, encoding='utf-8')
         
         if resultado.returncode == 0:
-            return formatar_saida(resultado.stdout.strip())  # Formata a saída
+            # return formatar_saida(resultado.stdout.strip())
+            # converte o resultado para string
+            return resultado.stdout.strip()
         else:
             return "Erro ao obter propriedades."
     
