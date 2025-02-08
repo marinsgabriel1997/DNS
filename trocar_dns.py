@@ -100,14 +100,15 @@ def formatar_saida(texto: str) -> str:
 
 def obter_propriedades_adaptador(adaptador: str) -> str:
     print(f"Obtendo propriedades do adaptador: {adaptador}")
+    propriedades_text.delete(1.0, tk.END)
+    propriedades_text.insert(tk.END, "Obtendo propriedades do adaptador, por favor aguarde...")
+    root.update()
     comando = f'powershell Get-NetIPConfiguration -InterfaceAlias "{adaptador}" -Detailed'
     
     try:
         resultado = subprocess.run(comando, shell=True, capture_output=True, text=True, encoding='utf-8')
         
         if resultado.returncode == 0:
-            # return formatar_saida(resultado.stdout.strip())
-            # converte o resultado para string
             return resultado.stdout.strip()
         else:
             return "Erro ao obter propriedades."
@@ -231,7 +232,7 @@ def aplicar_dns():
 # Interface gráfica
 root = tk.Tk()
 root.title("Trocar DNS")
-root.geometry("1920x1080")  # Altera o tamanho da janela
+root.geometry("1280x720")  # Altera o tamanho da janela
 
 # Cria um frame para as configurações
 config_frame = tk.Frame(root)
