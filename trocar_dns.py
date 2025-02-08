@@ -4,6 +4,9 @@ import subprocess
 import re
 import ctypes
 from typing import Tuple
+import psutil
+import socket
+import ipaddress
 
 DNS_OPTIONS = {
     "Google": ("8.8.8.8", "8.8.4.4", "2001:4860:4860::8888", "2001:4860:4860::8844"),
@@ -40,27 +43,15 @@ def listar_adaptadores():
     adaptadores = []
     adaptadores_ativos = []
     print("Listando adaptadores de rede...")
-    
-    try:
-        resultado = subprocess.run("chcp 65001 > nul & netsh interface show interface", shell=True, capture_output=True, text=True, encoding="utf-8")
-        linhas = resultado.stdout.split("\n")
-        print(f"Linhas retornadas: {linhas}")
-        
-        for linha in linhas[3:]:
-            partes = re.split(r"\s{2,}", linha.strip())
-            if len(partes) >= 4:
-                status, _, _, nome = partes
-                adaptadores.append(nome)
-                if status.lower() == "enabled":
-                    adaptadores_ativos.append(nome)
-                    print(f"Adaptador ativo encontrado: {nome}")
 
-        return [f"{'* ' if nome in adaptadores_ativos else ''}{nome}" for nome in adaptadores]
-    
-    except Exception as e:
-        messagebox.showerror("Erro", f"Erro ao listar adaptadores: {e}")
-        print(f"Erro ao listar adaptadores: {e}")
-        return []
+    for interface, info in psutil.net_if_addrs().items():
+        adaptadores.append(interface)
+        if interface in psutil.net_if_stats() and psutil.net_if_stats()[interface].isup:
+            adaptadores_ativos.append(interface)
+            print(f"Adaptador ativo encontrado: {interface}")
+
+    return [f"{'* ' if nome in adaptadores_ativos else ''}{nome}" for nome in adaptadores]
+
 
 def formatar_saida(texto: str) -> str:
     linhas = texto.splitlines()
